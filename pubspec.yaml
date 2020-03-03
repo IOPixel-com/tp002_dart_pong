@@ -1,5 +1,5 @@
-name: tp001_dart_starfield
-description: A dart starfield
+name: tp002_dart_pong
+description: A dart pong
 version: 0.0.0+1
 
 environment:
@@ -18,3 +18,5 @@ dev_dependencies:
 
 flutter:
   uses-material-design: true
+  assets:
+   - assets/images/
