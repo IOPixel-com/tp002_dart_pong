@@ -4,18 +4,16 @@ import 'package:flutter/material.dart';
 
 import 'package:flame/position.dart';
 
-enum IOAnchor { UPPER_LEFT, CENTER, LOWER_RIGHT }
+import 'package:tp002_dart_pong/ioposition.dart';
 
-class IOText {
+class IOText extends IOPosition {
   // painter
   TextPainter _painter;
   TextStyle _textStyle;
   // state
-  IOAnchor _anchor = IOAnchor.CENTER;
-  Position _pos = Position(0, 0);
-  Position _size = Position(0, 0);
 
-  IOText() {
+  IOText(IOAnchor anchor, Position position, Position size)
+      : super(anchor, position, size) {
     _painter = TextPainter(
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
@@ -33,30 +31,22 @@ class IOText {
     );
   }
 
-  set anchor(IOAnchor anchor) {
-    _anchor = anchor;
-  }
-
   set text(String txt) {
     _painter.text = TextSpan(text: txt, style: _textStyle);
     // compute layout & size
     _painter.layout();
     // retrieve size
-    _size = Position(_painter.size.width, _painter.size.height);
-  }
-
-  set position(Position pos) {
-    _pos = pos;
+    size = Position(_painter.size.width, _painter.size.height);
   }
 
   void draw(Canvas canvas) {
     Position newPos;
-    if (_anchor == IOAnchor.UPPER_LEFT) {
-      newPos = Position(_pos.x, _pos.y);
-    } else if (_anchor == IOAnchor.CENTER) {
-      newPos = Position(_pos.x - _size.x / 2.0, _pos.y - _size.y / 2.0);
-    } else if (_anchor == IOAnchor.LOWER_RIGHT) {
-      newPos = Position(_pos.x - _size.x, _pos.y - _size.y);
+    if (anchor == IOAnchor.UPPER_LEFT) {
+      newPos = Position(position.x, position.y);
+    } else if (anchor == IOAnchor.CENTER) {
+      newPos = Position(position.x - size.x / 2.0, position.y - size.y / 2.0);
+    } else if (anchor == IOAnchor.LOWER_RIGHT) {
+      newPos = Position(position.x - size.x, position.y - size.y);
     }
     _painter.paint(canvas, Offset(newPos.x, newPos.y));
   }

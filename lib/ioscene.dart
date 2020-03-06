@@ -3,17 +3,18 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:flame/position.dart';
+import 'package:tp002_dart_pong/ioposition.dart';
 
 import 'package:tp002_dart_pong/iosprite.dart';
 import 'package:tp002_dart_pong/iotext.dart';
 import 'package:tp002_dart_pong/pong.dart';
 
-enum IOEventType { VICTORY, DEFEAT, COLLISION_WALL, COLLISION_MALLET }
+enum IOPongEventType { VICTORY, DEFEAT, COLLISION_WALL, COLLISION_MALLET }
 
-class IOEvent {
-  IOEventType type;
+class IOPongEvent {
+  IOPongEventType type;
 
-  IOEvent(this.type);
+  IOPongEvent(this.type);
 }
 
 class IOScene {
@@ -29,28 +30,30 @@ class IOScene {
 
   IOScene(Position windowSize) {
     // sprites
-    _bg = IOSprite.upperLeft('bg_metal.png', Position(0, 0), windowSize);
-    _player = IOSprite.upperLeft(
-        'mallet_player.png', Position(0, 0), Position(64, 64));
-    _computer = IOSprite.upperLeft('mallet_computer.png',
+    _bg = IOSprite(
+        'bg_metal.png', IOAnchor.UPPER_LEFT, Position(0, 0), windowSize);
+    _player = IOSprite('mallet_player.png', IOAnchor.UPPER_LEFT, Position(0, 0),
+        Position(64, 64));
+    _computer = IOSprite('mallet_computer.png', IOAnchor.UPPER_LEFT,
         Position(0, windowSize.y - 64), Position(64, 64));
-    _puck = IOSprite.upperLeft(
+    _puck = IOSprite(
         'puck.png',
+        IOAnchor.UPPER_LEFT,
         Position(windowSize.x / 2, windowSize.y / 2),
         Position(Pong.PUCK_SIZE, Pong.PUCK_SIZE));
-    _wallLeft = IOSprite.upperLeft(
-        'wallLeft.png', Position(0, 0), Position(Pong.WALL_SIZE, windowSize.y));
-    _wallRight = IOSprite.upperLeft(
+    _wallLeft = IOSprite('wallLeft.png', IOAnchor.UPPER_LEFT, Position(0, 0),
+        Position(Pong.WALL_SIZE, windowSize.y));
+    _wallRight = IOSprite(
         'wallRight.png',
+        IOAnchor.UPPER_LEFT,
         Position(windowSize.x - Pong.WALL_SIZE, 0),
         Position(Pong.PUCK_SIZE, windowSize.y));
-    _msgWin =
-        IOSprite.center('win_text.png', windowSize / 2.0, Position(128, 64));
-    _msgLose =
-        IOSprite.center('lose_text.png', windowSize / 2.0, Position(128, 64));
+    _msgWin = IOSprite(
+        'win_text.png', IOAnchor.CENTER, windowSize / 2.0, Position(128, 64));
+    _msgLose = IOSprite(
+        'lose_text.png', IOAnchor.CENTER, windowSize / 2.0, Position(128, 64));
     // texts
-    _score = IOText();
-    _score.position = windowSize / 2.0;
+    _score = IOText(IOAnchor.CENTER, windowSize / 2.0, Position(32, 32));
     _score.text = '0 - 0';
   }
 
