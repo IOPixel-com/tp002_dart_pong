@@ -8,7 +8,7 @@ import 'package:flame/position.dart';
 
 enum IOPAD { LEFT, RIGHT, NONE }
 
-enum IOEventType { UP, DOWN }
+enum IOEventType { UP, DOWN, MOVE }
 
 class IOEvent {
   final IOEventType type;
@@ -18,6 +18,10 @@ class IOEvent {
 }
 
 class IOActivity {
+  IOApplication application;
+
+  IOActivity(this.application);
+
   void resize(Size sz) {}
 
   void render(Canvas canvas) {}
@@ -30,6 +34,7 @@ class IOActivity {
 class IOApplication extends Game with PanDetector, TapDetector {
   List<IOActivity> _activities;
   IOActivity _current;
+  Size _size;
 
   IOApplication() {
     _activities = List<IOActivity>();
@@ -37,6 +42,9 @@ class IOApplication extends Game with PanDetector, TapDetector {
 
   void start(IOActivity activity) {
     _activities.add(activity);
+    if (_size != null) {
+      activity.resize(_size);
+    }
     _current = activity;
   }
 
@@ -51,6 +59,7 @@ class IOApplication extends Game with PanDetector, TapDetector {
 
   @override
   void resize(Size sz) {
+    _size = sz;
     _current?.resize(sz);
   }
 
@@ -81,7 +90,7 @@ class IOApplication extends Game with PanDetector, TapDetector {
   @override
   void onPanUpdate(DragUpdateDetails details) {
     // print('update ${details.localPosition} $_touch');
-    _current?.onEvent(IOEvent(IOEventType.DOWN,
+    _current?.onEvent(IOEvent(IOEventType.MOVE,
         Position(details.localPosition.dx, details.localPosition.dy)));
   }
 }

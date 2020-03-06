@@ -6,18 +6,46 @@ import 'package:flutter/foundation.dart';
 import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
 
+import 'package:tp002_dart_pong/iogui.dart';
 import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/iophy.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
 
 enum IOTIPOFF { PLAYER, COMPUTER }
 
-class PongMenu extends IOActivity {}
-
 class PongApplication extends IOApplication {
   PongApplication() {
-    Pong pm = Pong();
+    PongMenu pm = PongMenu(this);
     start(pm);
+  }
+}
+
+class PongMenu extends IOActivity {
+  IOGUI _gui = IOGUI();
+  int _counter = 0;
+
+  PongMenu(IOApplication app) : super(app);
+
+  @override
+  void resize(Size sz) {}
+
+  @override
+  void update(double t) {
+    _counter++;
+    if (_counter == 10000) {
+      Pong pm = Pong(application);
+      application.start(pm);
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    _gui.render(canvas);
+  }
+
+  @override
+  void onEvent(IOEvent evt) {
+    _gui.onEvent(evt);
   }
 }
 
@@ -31,7 +59,6 @@ class Pong extends IOActivity {
   static const PAD_DX = 10.0;
 
   // gamepad
-  var _padTouch = false;
   IOPAD _pad = IOPAD.NONE;
 
   // phy state
@@ -44,6 +71,8 @@ class Pong extends IOActivity {
   // state
   var _size = Size(0, 0);
   IOScene _scene;
+
+  Pong(IOApplication app) : super(app);
 
   @override
   void resize(Size sz) {
@@ -113,7 +142,7 @@ class Pong extends IOActivity {
 
   @override
   void onEvent(IOEvent evt) {
-    if (evt.type == IOEventType.DOWN) {
+    if (evt.type == IOEventType.DOWN || evt.type == IOEventType.MOVE) {
       if (evt.position.x < _size.width / 2.0) {
         _pad = IOPAD.LEFT;
       } else {
