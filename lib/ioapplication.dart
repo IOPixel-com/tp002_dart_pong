@@ -2,7 +2,6 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 
-import 'package:flame/gestures.dart';
 import 'package:flame/game.dart';
 import 'package:flame/position.dart';
 
@@ -42,7 +41,7 @@ class IOActivity {
   }
 }
 
-class IOApplication extends Game with PanDetector, TapDetector {
+class IOApplication extends Game {
   List<IOActivity> _activities;
   IOActivity _current;
   Size _size;
@@ -84,23 +83,20 @@ class IOApplication extends Game with PanDetector, TapDetector {
     _current?.update(t);
   }
 
-  @override
-  void onTapUp(TapUpDetails details) {
-    // print('up ${details.localPosition}');
-    _current?.onEvent(IOEvent(IOEventType.UP,
-        Position(details.localPosition.dx, details.localPosition.dy)));
-  }
-
-  @override
-  void onTapDown(TapDownDetails details) {
-    // print('down ${details.localPosition}');
+  void down(PointerEvent details) {
+    // print('DD down $details');
     _current?.onEvent(IOEvent(IOEventType.DOWN,
         Position(details.localPosition.dx, details.localPosition.dy)));
   }
 
-  @override
-  void onPanUpdate(DragUpdateDetails details) {
-    // print('update ${details.localPosition} $_touch');
+  void up(PointerEvent details) {
+    // print('DD up $details');
+    _current?.onEvent(IOEvent(IOEventType.UP,
+        Position(details.localPosition.dx, details.localPosition.dy)));
+  }
+
+  void move(PointerEvent details) {
+    // print('DD move $details');
     _current?.onEvent(IOEvent(IOEventType.MOVE,
         Position(details.localPosition.dx, details.localPosition.dy)));
   }

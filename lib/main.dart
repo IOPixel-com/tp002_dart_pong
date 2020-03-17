@@ -3,5 +3,10 @@ import 'package:tp002_dart_pong/pong.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(PongApplication().widget);
+  var app = PongApplication();
+  runApp(Listener(
+      onPointerDown: app.down,
+      onPointerUp: app.up,
+      onPointerMove: app.move,
+      child: app.widget));
 }
