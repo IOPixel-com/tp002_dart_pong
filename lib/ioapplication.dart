@@ -6,6 +6,8 @@ import 'package:flame/gestures.dart';
 import 'package:flame/game.dart';
 import 'package:flame/position.dart';
 
+import 'package:tp002_dart_pong/iogui.dart';
+
 enum IOPAD { LEFT, RIGHT, NONE }
 
 enum IOEventType { UP, DOWN, MOVE }
@@ -19,16 +21,25 @@ class IOEvent {
 
 class IOActivity {
   IOApplication application;
+  IOGUI gui = IOGUI();
 
   IOActivity(this.application);
 
-  void resize(Size sz) {}
+  void resize(Size sz) {
+    gui.resize(Position(sz.width, sz.height));
+  }
 
-  void render(Canvas canvas) {}
+  void render(Canvas canvas) {
+    gui.render(canvas);
+  }
 
-  void update(double t) {}
+  void update(double t) {
+    gui.update(t);
+  }
 
-  void onEvent(IOEvent evt) {}
+  void onEvent(IOEvent evt) {
+    gui.onEvent(evt);
+  }
 }
 
 class IOApplication extends Game with PanDetector, TapDetector {

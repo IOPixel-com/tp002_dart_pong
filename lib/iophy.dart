@@ -1,7 +1,4 @@
-import 'package:flame/gestures.dart';
-import 'package:flame/game.dart';
 import 'package:flame/position.dart';
-import 'package:flame/flame.dart';
 
 import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/pong.dart';
@@ -46,7 +43,17 @@ class IOPhy {
     _maxX = sz.x - Pong.WALL_SIZE;
     _height = sz.y;
     // restart game
-    start();
+    init();
+  }
+
+  void init([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
+    // positions
+    _puckPos = Position((_minX + _maxX) / 2.0, _height / 2.0);
+    _playerPos = Position((_minX + _maxX) / 2.0, Pong.MALLET_SIZE / 2.0);
+    _computerPos =
+        Position((_minX + _maxX) / 2.0, _height - Pong.MALLET_SIZE / 2.0);
+    _puckSpeed = 1;
+    _puckVelocity = Position(0, 0);
   }
 
   void start([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
@@ -92,12 +99,10 @@ class IOPhy {
     // check end of point
     if (newPos.y < Pong.MALLET_SIZE / 2.0) {
       // one point for computer
-      start(IOTIPOFF.COMPUTER);
       events.add(IOPongEvent(IOPongEventType.DEFEAT));
       return;
     } else if (newPos.y > _height - Pong.MALLET_SIZE / 2.0) {
       // one point for player
-      start(IOTIPOFF.PLAYER);
       events.add(IOPongEvent(IOPongEventType.VICTORY));
       return;
     }

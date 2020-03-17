@@ -1,5 +1,6 @@
 import 'dart:ui';
 
+import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
@@ -7,6 +8,7 @@ import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
 
 import 'package:tp002_dart_pong/iogui.dart';
+import 'package:tp002_dart_pong/ioposition.dart';
 import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/iophy.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
@@ -21,32 +23,63 @@ class PongApplication extends IOApplication {
 }
 
 class PongMenu extends IOActivity {
-  IOGUI _gui = IOGUI();
-  int _counter = 0;
+  IOButton playButton;
+  IOButton quitButton;
+  IOImage bg;
 
-  PongMenu(IOApplication app) : super(app);
+  PongMenu(IOApplication app) : super(app) {
+    gui.clickCB = this.clickCB;
+    gui.resizeCB = this.resizeCB;
+    bg = gui.createImage('bg', 'bg_1024.png', IOAnchor.CENTER,
+        Position(400, 600), Position(100, 100), IORatio.HORIZONTAL);
+    playButton = gui.createButton('play', 'win_text.png', IOAnchor.CENTER,
+        Position(400, 400), Position(100, 100));
+    quitButton = gui.createButton('quit', 'lose_text.png', IOAnchor.CENTER,
+        Position(400, 600), Position(100, 100));
+  }
 
-  @override
-  void resize(Size sz) {}
+  // specifics
 
-  @override
-  void update(double t) {
-    _counter++;
-    if (_counter == 10000) {
-      Pong pm = Pong(application);
-      application.start(pm);
+  void clickCB(String uid) {
+    if (uid == 'play') {
+      //exit(0);
+      Pong pg = Pong(this.application);
+      this.application.start(pg);
+    } else if (uid == 'quit') {
+//      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
+      SystemChannels.platform.invokeMethod<void>('SystemNavigator.pop');
+    }
+    print('click on $uid');
+  }
+
+  void resizeCB(String uid, Position sz) {
+    if (uid == 'play') {
+      playButton.height = sz.y / 10.0;
+      playButton.position = Position(sz.x / 2.0, sz.y / 2.0 - 100);
+    }
+    if (uid == 'quit') {
+      quitButton.height = sz.y / 10.0;
+      quitButton.position = Position(sz.x / 2.0, sz.y / 2.0 + 100);
+    }
+    if (uid == 'bg') {
+      bg.position = Position(sz.x / 2.0, sz.y / 2.0);
+      bg.size = Position(sz.x, sz.y);
+      if (sz.x > sz.y) {
+        bg.align = IORatio.HORIZONTAL;
+      } else {
+        bg.align = IORatio.VERTICAL;
+      }
     }
   }
+}
 
-  @override
-  void render(Canvas canvas) {
-    _gui.render(canvas);
-  }
-
-  @override
-  void onEvent(IOEvent evt) {
-    _gui.onEvent(evt);
-  }
+enum PongState {
+  START,
+  PLAY,
+  COMPUTER_POINT,
+  PLAYER_POINT,
+  COMPUTER_VICTORY,
+  PLAYER_VICTORY
 }
 
 class Pong extends IOActivity {
@@ -65,6 +98,9 @@ class Pong extends IOActivity {
   IOPhy _phy = IOPhy();
 
   // score state
+  PongState _state = PongState.START;
+  double _stateDate = 0;
+  double _eventDate = 0;
   int _computerScore = 0;
   int _playerScore = 0;
 
@@ -90,6 +126,8 @@ class Pong extends IOActivity {
       }
     } else {
       _scene.resize(Position(sz.width, sz.height));
+      _state = PongState.START;
+      _eventDate = _stateDate;
     }
   }
 
@@ -102,6 +140,20 @@ class Pong extends IOActivity {
 
   @override
   void update(double t) {
+    // update
+    _stateDate += t;
+    if (_state == PongState.START && (_stateDate - _eventDate > 3)) {
+      _eventDate = _stateDate;
+      _state = PongState.PLAY;
+      _phy.start();
+    }
+    //print("${_state} ${_stateDate - _eventDate}");
+    if ((_state == PongState.PLAYER_VICTORY ||
+            _state == PongState.COMPUTER_VICTORY) &&
+        (_stateDate - _eventDate > 3)) {
+      this.application.stop();
+      return;
+    }
     // delta en second entre deux images
     // a 60 fps (ips en fr) cela correspond a 0.0166s
     // si on a 0.032ms, on a un traitement graphique trop lourd pour une image
@@ -110,12 +162,35 @@ class Pong extends IOActivity {
     _phy.update(t, _pad);
     // handle events
     for (var evt in _phy.events) {
+      print("${evt.type} $_stateDate");
       if (evt.type == IOPongEventType.DEFEAT) {
         _computerScore++;
+        if (_computerScore >= 5) {
+          _state = PongState.COMPUTER_VICTORY;
+          _eventDate = _stateDate;
+          _phy.init();
+        } else {
+          // _phy.start(IOTIPOFF.PLAYER);
+          _state = PongState.START;
+          _eventDate = _stateDate;
+          _phy.init();
+        }
         _scene?.setScore(_playerScore, _computerScore);
+        break;
       } else if (evt.type == IOPongEventType.VICTORY) {
         _playerScore++;
+        if (_playerScore >= 5) {
+          _state = PongState.PLAYER_VICTORY;
+          _eventDate = _stateDate;
+          _phy.init();
+        } else {
+          // _phy.start(IOTIPOFF.COMPUTER);
+          _state = PongState.START;
+          _eventDate = _stateDate;
+          _phy.init();
+        }
         _scene?.setScore(_playerScore, _computerScore);
+        break;
       } else if (evt.type == IOPongEventType.COLLISION_MALLET) {
         if (!kIsWeb) {
           Flame.audio.play('puck.mp3');
@@ -143,7 +218,7 @@ class Pong extends IOActivity {
   @override
   void onEvent(IOEvent evt) {
     if (evt.type == IOEventType.DOWN || evt.type == IOEventType.MOVE) {
-      if (evt.position.x < _size.width / 2.0) {
+      if (evt.position.x < _phy.playerPos.x) {
         _pad = IOPAD.LEFT;
       } else {
         _pad = IOPAD.RIGHT;
