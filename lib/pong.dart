@@ -92,6 +92,8 @@ class Pong extends IOActivity {
   static const PAD_DX = 10.0;
 
   // gamepad
+  bool _padPressed = false;
+  Position _padPosition = Position(0, 0);
   IOPAD _pad = IOPAD.NONE;
 
   // phy state
@@ -140,6 +142,19 @@ class Pong extends IOActivity {
 
   @override
   void update(double t) {
+    // pad management
+    if (_padPressed) {
+      if ((_padPosition.x - _phy.playerPos.x).abs() < PAD_DX) {
+        _pad = IOPAD.CENTER;
+      } else if (_padPosition.x < _phy.playerPos.x) {
+        _pad = IOPAD.LEFT;
+      } else {
+        _pad = IOPAD.RIGHT;
+      }
+    } else {
+      _pad = IOPAD.NONE;
+    }
+
     // update
     _stateDate += t;
     if (_state == PongState.START && (_stateDate - _eventDate > 3)) {
@@ -217,14 +232,11 @@ class Pong extends IOActivity {
 
   @override
   void onEvent(IOEvent evt) {
-    if (evt.type == IOEventType.DOWN || evt.type == IOEventType.MOVE) {
-      if (evt.position.x < _phy.playerPos.x) {
-        _pad = IOPAD.LEFT;
-      } else {
-        _pad = IOPAD.RIGHT;
-      }
-    } else {
-      _pad = IOPAD.NONE;
+    if (evt.type == IOEventType.DOWN) {
+      _padPressed = true;
+    } else if (evt.type == IOEventType.UP) {
+      _padPressed = false;
     }
+    _padPosition = evt.position;
   }
 }

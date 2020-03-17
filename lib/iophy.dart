@@ -77,7 +77,14 @@ class IOPhy {
 
   void update(double dT, IOPAD direction) async {
     // update player position
-    if (direction == IOPAD.LEFT) {
+    if (direction == IOPAD.CENTER) {
+      // limit to walls
+      if (_playerPos.x - Pong.MALLET_SIZE / 2.0 - Pong.PAD_DX < _minX) {
+        _playerPos.x = _minX + Pong.MALLET_SIZE / 2.0;
+      } else if (_playerPos.x + Pong.MALLET_SIZE / 2.0 + Pong.PAD_DX > _maxX) {
+        _playerPos.x = _maxX - Pong.MALLET_SIZE / 2.0;
+      }
+    } else if (direction == IOPAD.LEFT) {
       // limit to the left wall
       if (_playerPos.x - Pong.MALLET_SIZE / 2.0 - Pong.PAD_DX < _minX) {
         _playerPos.x = _minX + Pong.MALLET_SIZE / 2.0;

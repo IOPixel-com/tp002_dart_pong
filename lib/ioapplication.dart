@@ -7,7 +7,7 @@ import 'package:flame/position.dart';
 
 import 'package:tp002_dart_pong/iogui.dart';
 
-enum IOPAD { LEFT, RIGHT, NONE }
+enum IOPAD { CENTER, LEFT, RIGHT, NONE }
 
 enum IOEventType { UP, DOWN, MOVE }
 
