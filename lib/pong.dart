@@ -8,9 +8,10 @@ import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
 
 import 'package:tp002_dart_pong/iogui.dart';
-import 'package:tp002_dart_pong/ioposition.dart';
+import 'package:tp002_dart_pong/gui/ioposition.dart';
 import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/iophy.dart';
+import 'package:tp002_dart_pong/iotime.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
 
 enum IOTIPOFF { PLAYER, COMPUTER }
@@ -110,7 +111,19 @@ class Pong extends IOActivity {
   var _size = Size(0, 0);
   IOScene _scene;
 
-  Pong(IOApplication app) : super(app);
+  // messages
+  IOImage _winMsg;
+  IOVisibilityAnimator _awinMsg;
+
+  Pong(IOApplication app) : super(app) {
+    _winMsg = gui.createImage('play', 'win_text.png', IOAnchor.CENTER,
+        Position(400, 400), Position(100, 100), IORatio.VERTICAL);
+    _winMsg.hide();
+    _awinMsg = gui.createVisibilityAnimator();
+    _awinMsg.attach(_winMsg);
+    _awinMsg.start(IOTime.time);
+    _winMsg.opacity = .2;
+  }
 
   @override
   void resize(Size sz) {
@@ -131,6 +144,7 @@ class Pong extends IOActivity {
       _state = PongState.START;
       _eventDate = _stateDate;
     }
+    super.resize(sz);
   }
 
   @override
@@ -138,10 +152,12 @@ class Pong extends IOActivity {
     if (_scene != null) {
       _scene.draw(canvas);
     }
+    super.render(canvas);
   }
 
   @override
-  void update(double t) {
+  void update() {
+    super.update();
     // pad management
     if (_padPressed) {
       if ((_padPosition.x - _phy.playerPos.x).abs() < PAD_DX) {
@@ -156,7 +172,7 @@ class Pong extends IOActivity {
     }
 
     // update
-    _stateDate += t;
+    _stateDate = IOTime.time;
     if (_state == PongState.START && (_stateDate - _eventDate > 3)) {
       _eventDate = _stateDate;
       _state = PongState.PLAY;
@@ -174,7 +190,7 @@ class Pong extends IOActivity {
     // si on a 0.032ms, on a un traitement graphique trop lourd pour une image
     // print('delta time in ms between two frames: $_date $t');
     // update physic
-    _phy.update(t, _pad);
+    _phy.update(IOTime.delta, _pad);
     // handle events
     for (var evt in _phy.events) {
       print("${evt.type} $_stateDate");

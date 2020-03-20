@@ -6,6 +6,7 @@ import 'package:flame/game.dart';
 import 'package:flame/position.dart';
 
 import 'package:tp002_dart_pong/iogui.dart';
+import 'package:tp002_dart_pong/iotime.dart';
 
 enum IOPAD { CENTER, LEFT, RIGHT, NONE }
 
@@ -32,8 +33,8 @@ class IOActivity {
     gui.render(canvas);
   }
 
-  void update(double t) {
-    gui.update(t);
+  void update() {
+    gui.update();
   }
 
   void onEvent(IOEvent evt) {
@@ -80,7 +81,8 @@ class IOApplication extends Game {
 
   @override
   void update(double t) {
-    _current?.update(t);
+    IOTime.incTime(t);
+    _current?.update();
   }
 
   void down(PointerEvent details) {

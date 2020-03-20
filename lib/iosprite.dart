@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/sprite.dart';
 import 'package:flame/position.dart';
 
-import 'package:tp002_dart_pong/ioposition.dart';
+import 'package:tp002_dart_pong/gui/ioposition.dart';
 
 class IOSprite extends IOPosition {
   Sprite _sprite;

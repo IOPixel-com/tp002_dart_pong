@@ -1,6 +1,6 @@
 {
-    "name": "tp001_dart_starfield",
-    "short_name": "tp001_dart_starfield",
+    "name": "tp002_dart_pong",
+    "short_name": "tp002_dart_pong",
     "start_url": ".",
     "display": "minimal-ui",
     "background_color": "#0175C2",

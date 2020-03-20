@@ -3,7 +3,7 @@ import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import 'package:flame/position.dart';
-import 'package:tp002_dart_pong/ioposition.dart';
+import 'package:tp002_dart_pong/gui/ioposition.dart';
 
 import 'package:tp002_dart_pong/iosprite.dart';
 import 'package:tp002_dart_pong/iotext.dart';
@@ -24,8 +24,8 @@ class IOScene {
   IOSprite _puck;
   IOSprite _wallLeft;
   IOSprite _wallRight;
-  IOSprite _msgWin;
-  IOSprite _msgLose;
+  // IOSprite _msgWin;
+  // IOSprite _msgLose;
   IOText _score;
 
   IOScene(Position windowSize) {
@@ -48,10 +48,6 @@ class IOScene {
         IOAnchor.UPPER_LEFT,
         Position(windowSize.x - Pong.WALL_SIZE, 0),
         Position(Pong.PUCK_SIZE, windowSize.y));
-    _msgWin = IOSprite(
-        'win_text.png', IOAnchor.CENTER, windowSize / 2.0, Position(128, 64));
-    _msgLose = IOSprite(
-        'lose_text.png', IOAnchor.CENTER, windowSize / 2.0, Position(128, 64));
     // texts
     _score = IOText(IOAnchor.CENTER, windowSize / 2.0, Position(32, 32));
     _score.text = '0 - 0';
@@ -96,9 +92,6 @@ class IOScene {
     _computer.position = Position(0, size.y - 64);
     // score
     _score.position = size / 2.0;
-    // msgs
-    _msgWin.position = size / 2.0;
-    _msgLose.position = size / 2.0;
   }
 
   void draw(Canvas canvas) {
@@ -110,7 +103,5 @@ class IOScene {
     _player.draw(canvas);
     _computer.draw(canvas);
     _puck.draw(canvas);
-    _msgLose.draw(canvas);
-    _msgWin.draw(canvas);
   }
 }

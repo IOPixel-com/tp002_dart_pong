@@ -1,2 +1,2 @@
-# tp001_dart_starfield
-Starfield in Dart
+# tp002_dart_pong
+Pong in Dart

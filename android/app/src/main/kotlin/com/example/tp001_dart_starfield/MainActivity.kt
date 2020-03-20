@@ -1,4 +1,4 @@
-package com.example.tp001_dart_starfield
+package com.example.tp002_dart_pong
 
 import androidx.annotation.NonNull;
 import io.flutter.embedding.android.FlutterActivity
