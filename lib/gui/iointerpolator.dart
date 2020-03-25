@@ -7,10 +7,16 @@ class IOInterpolator {
   }
 }
 
-class IOLineInterpolator {
+class IOLineInterpolator extends IOInterpolator {
   var _points = List<Position>();
 
-  double getInterpolation(double t) {
+  IOLineInterpolator([List<Position> pts]) {
+    if (pts != null) {
+      _points.addAll(pts);
+    }
+  }
+
+  double compute(double t) {
     var current = Position(0, 0);
     var next = Position(0, 0);
     for (int i = 0; i < _points.length; ++i) {
@@ -32,7 +38,7 @@ class IOLineInterpolator {
     }
   }
 
-  void addPoints(Position pt) {
-    _points.add(pt);
+  void addPoints(List<Position> pts) {
+    _points.addAll(pts);
   }
 }

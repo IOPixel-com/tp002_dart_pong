@@ -59,9 +59,9 @@ class IOPhy {
   void start([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
     // positions
     _puckPos = Position((_minX + _maxX) / 2.0, _height / 2.0);
-    _playerPos = Position((_minX + _maxX) / 2.0, Pong.MALLET_SIZE / 2.0);
-    _computerPos =
-        Position((_minX + _maxX) / 2.0, _height - Pong.MALLET_SIZE / 2.0);
+    //_playerPos = Position((_minX + _maxX) / 2.0, Pong.MALLET_SIZE / 2.0);
+    //_computerPos =
+    //    Position((_minX + _maxX) / 2.0, _height - Pong.MALLET_SIZE / 2.0);
     if (tipoff == IOTIPOFF.PLAYER) {
       _puckVelocity = Position(0, -Pong.PUCK_VELOCITY);
     } else {

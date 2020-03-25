@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:ui' as ui;
 
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
@@ -6,9 +6,11 @@ import 'package:flutter/foundation.dart';
 
 import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
+import 'package:tp002_dart_pong/gui/iointerpolator.dart';
 
-import 'package:tp002_dart_pong/iogui.dart';
 import 'package:tp002_dart_pong/gui/ioposition.dart';
+import 'package:tp002_dart_pong/gui/ioanimator.dart';
+import 'package:tp002_dart_pong/gui/iogui.dart';
 import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/iophy.dart';
 import 'package:tp002_dart_pong/iotime.dart';
@@ -23,20 +25,48 @@ class PongApplication extends IOApplication {
   }
 }
 
+class PongTest extends IOActivity {
+  ui.Image img;
+
+  PongTest(IOApplication app) : super(app);
+
+  void render(Canvas canvas) {}
+}
+
 class PongMenu extends IOActivity {
+  static const I7W = 750.0;
+  static const I7H = 1334.0;
+
+  IOImage bg;
+  IOImage logo;
+  IOImage bgPopup;
   IOButton playButton;
   IOButton quitButton;
-  IOImage bg;
+  IOButton settingsButton;
 
   PongMenu(IOApplication app) : super(app) {
     gui.clickCB = this.clickCB;
     gui.resizeCB = this.resizeCB;
-    bg = gui.createImage('bg', 'bg_1024.png', IOAnchor.CENTER,
-        Position(400, 600), Position(100, 100), IORatio.HORIZONTAL);
-    playButton = gui.createButton('play', 'win_text.png', IOAnchor.CENTER,
-        Position(400, 400), Position(100, 100));
-    quitButton = gui.createButton('quit', 'lose_text.png', IOAnchor.CENTER,
-        Position(400, 600), Position(100, 100));
+    bg = gui.createImage(gui, 'bg', 'bg_1024.png', IOAnchor.CENTER,
+        Rect.fromLTWH(0, 0, I7W, I7H), IORatio.HORIZONTAL);
+    logo = gui.createImage(gui, 'logo', 'logo.png', IOAnchor.CENTER,
+        Rect.fromLTWH(0, 0, 100, I7H / 10.0), IORatio.NONE);
+    // menu
+    bgPopup = gui.createImage(gui, 'bg_popup', 'bg_popup.png', IOAnchor.CENTER,
+        Rect.fromLTWH(I7W / 2.0, I7H / 2.0, 100, 100), IORatio.NONE);
+    playButton = gui.createButton(bgPopup, 'play', 'win_text.png',
+        IOAnchor.CENTER, Rect.fromLTWH(400, 400, 100, 100));
+    quitButton = gui.createButton(bgPopup, 'quit', 'lose_text.png',
+        IOAnchor.CENTER, Rect.fromLTWH(400, 600, 100, 100));
+    // settings
+    settingsButton = gui.createButton(gui, 'settings', 'settings_on.png',
+        IOAnchor.LOWER_RIGHT, Rect.fromLTWH(I7W, I7H, 100, 100));
+    //settingsButton.loadDisabled('settings_off.png');
+  }
+
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
   }
 
   // specifics
@@ -47,29 +77,34 @@ class PongMenu extends IOActivity {
       Pong pg = Pong(this.application);
       this.application.start(pg);
     } else if (uid == 'quit') {
-//      SystemChannels.platform.invokeMethod('SystemNavigator.pop');
       SystemChannels.platform.invokeMethod<void>('SystemNavigator.pop');
     }
     print('click on $uid');
   }
 
   void resizeCB(String uid, Position sz) {
-    if (uid == 'play') {
+    if (uid == 'logo') {
+      logo.height = sz.y / 10.0;
+      logo.position = Offset(0, -4.0 * sz.y / 10.0);
+    } else if (uid == 'bg_popup') {
+      bgPopup.height = sz.y / 2.0;
+      bgPopup.position = Offset(0, 0);
+    } else if (uid == 'play') {
       playButton.height = sz.y / 10.0;
-      playButton.position = Position(sz.x / 2.0, sz.y / 2.0 - 100);
-    }
-    if (uid == 'quit') {
+      playButton.position = Offset(0, -sz.y / 10.0);
+    } else if (uid == 'quit') {
       quitButton.height = sz.y / 10.0;
-      quitButton.position = Position(sz.x / 2.0, sz.y / 2.0 + 100);
-    }
-    if (uid == 'bg') {
-      bg.position = Position(sz.x / 2.0, sz.y / 2.0);
-      bg.size = Position(sz.x, sz.y);
-      if (sz.x > sz.y) {
-        bg.align = IORatio.HORIZONTAL;
+      quitButton.position = Offset(0, sz.y / 10.0);
+    } else if (uid == 'settings') {
+      settingsButton.height = sz.y / 20.0;
+      settingsButton.position = Offset(-sz.y / 20.0, -sz.y / 20.0);
+    } else if (uid == 'bg') {
+      if (sz.x < sz.y) {
+        bg.height = sz.y;
       } else {
-        bg.align = IORatio.VERTICAL;
+        bg.width = sz.x;
       }
+      bg.position = Offset(0, 0);
     }
   }
 }
@@ -113,16 +148,16 @@ class Pong extends IOActivity {
 
   // messages
   IOImage _winMsg;
-  IOVisibilityAnimator _awinMsg;
+  IOAnimator _awinMsg;
 
   Pong(IOApplication app) : super(app) {
-    _winMsg = gui.createImage('play', 'win_text.png', IOAnchor.CENTER,
-        Position(400, 400), Position(100, 100), IORatio.VERTICAL);
-    _winMsg.hide();
-    _awinMsg = gui.createVisibilityAnimator();
+    _winMsg = gui.createImage(gui, 'play', 'win_text.png', IOAnchor.CENTER,
+        Rect.fromLTWH(400, 400, 100, 100), IORatio.VERTICAL);
+    _awinMsg = gui.createOpacityAnimator(
+        IOLineInterpolator([Position(0, 0), Position(.5, 1), Position(1, 0)]));
+
     _awinMsg.attach(_winMsg);
-    _awinMsg.start(IOTime.time);
-    _winMsg.opacity = .2;
+    _awinMsg.start(IOTime.time, 5);
   }
 
   @override

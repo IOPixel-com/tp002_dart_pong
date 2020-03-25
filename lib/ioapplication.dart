@@ -5,8 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame/position.dart';
 
-import 'package:tp002_dart_pong/iogui.dart';
+import 'package:tp002_dart_pong/gui/index.dart';
 import 'package:tp002_dart_pong/iotime.dart';
+import 'package:tp002_dart_pong/render/resources_loader.dart';
 
 enum IOPAD { CENTER, LEFT, RIGHT, NONE }
 
@@ -19,33 +20,70 @@ class IOEvent {
   IOEvent(this.type, this.position);
 }
 
-class IOActivity {
-  IOApplication application;
-  IOGUI gui = IOGUI();
+enum IOActivityStatus { INIT, STARTED, ENDED }
 
-  IOActivity(this.application);
+class IOActivity {
+  // cache
+  IOApplication application;
+  // state
+  var _status = IOActivityStatus.INIT;
+  // services
+  var _resourceLoader = IOResourcesLoader();
+  // gui
+  IOGUI gui;
+
+  IOActivity(this.application) {
+    gui = IOGUI(_resourceLoader);
+  }
 
   void resize(Size sz) {
-    gui.resize(Position(sz.width, sz.height));
+    if (_status == IOActivityStatus.STARTED) {
+      gui.resize(Position(sz.width, sz.height));
+    }
   }
 
   void render(Canvas canvas) {
-    gui.render(canvas);
+    if (_status == IOActivityStatus.STARTED) {
+      gui.render(canvas);
+    }
   }
 
   void update() {
-    gui.update();
+    if (_status == IOActivityStatus.INIT) {
+      if (_resourceLoader.loaded) {
+        _status = IOActivityStatus.STARTED;
+        resize(application.size);
+      }
+    } else if (_status == IOActivityStatus.STARTED) {
+      gui.update();
+    }
   }
 
   void onEvent(IOEvent evt) {
-    gui.onEvent(evt);
+    if (_status == IOActivityStatus.STARTED) {
+      gui.onEvent(evt);
+    }
+  }
+
+  // util
+  bool get resourcesLoaded {
+    return _resourceLoader.loaded;
+  }
+
+  Future<IOResource> loadTexture(String fileName, [IOResourceLoadedCB cb]) {
+    return _resourceLoader.loadTexture(fileName, cb);
   }
 }
 
 class IOApplication extends Game {
+  // activities
   List<IOActivity> _activities;
   IOActivity _current;
   Size _size;
+
+  Size get size {
+    return _size;
+  }
 
   IOApplication() {
     _activities = List<IOActivity>();
@@ -53,9 +91,6 @@ class IOApplication extends Game {
 
   void start(IOActivity activity) {
     _activities.add(activity);
-    if (_size != null) {
-      activity.resize(_size);
-    }
     _current = activity;
   }
 

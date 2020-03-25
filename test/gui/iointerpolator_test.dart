@@ -6,16 +6,14 @@ void main() {
   group('IOLineInterpolator', () {
     test('Simple case', () {
       var i = IOLineInterpolator();
-      i.addPoints(Position(0, 0));
-      i.addPoints(Position(0.5, 1));
-      i.addPoints(Position(1, 0));
-      expect(i.getInterpolation(-1), 0);
-      expect(i.getInterpolation(0), 0);
-      expect(i.getInterpolation(0.25), .5);
-      expect(i.getInterpolation(0.5), 1);
-      expect(i.getInterpolation(0.75), .5);
-      expect(i.getInterpolation(1), 0);
-      expect(i.getInterpolation(2.0), 0.0);
+      i.addPoints([Position(0, 0), Position(0.5, 1), Position(1, 0)]);
+      expect(i.compute(-1), 0);
+      expect(i.compute(0), 0);
+      expect(i.compute(0.25), .5);
+      expect(i.compute(0.5), 1);
+      expect(i.compute(0.75), .5);
+      expect(i.compute(1), 0);
+      expect(i.compute(2.0), 0.0);
     });
   });
 }
