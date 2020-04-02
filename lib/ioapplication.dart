@@ -38,7 +38,7 @@ class IOActivity {
 
   void resize(Size sz) {
     if (_status == IOActivityStatus.STARTED) {
-      gui.resize(Position(sz.width, sz.height));
+      gui.size = sz;
     }
   }
 
@@ -53,6 +53,7 @@ class IOActivity {
       if (_resourceLoader.loaded) {
         _status = IOActivityStatus.STARTED;
         resize(application.size);
+        onMount();
       }
     } else if (_status == IOActivityStatus.STARTED) {
       gui.update();
@@ -64,6 +65,8 @@ class IOActivity {
       gui.onEvent(evt);
     }
   }
+
+  void onMount() {}
 
   // util
   bool get resourcesLoaded {

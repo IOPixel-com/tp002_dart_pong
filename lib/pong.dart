@@ -1,17 +1,11 @@
-import 'dart:ui' as ui;
-
 import 'package:flutter/services.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 
 import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
-import 'package:tp002_dart_pong/gui/iointerpolator.dart';
+import 'package:tp002_dart_pong/gui/index.dart';
 
-import 'package:tp002_dart_pong/gui/ioposition.dart';
-import 'package:tp002_dart_pong/gui/ioanimator.dart';
-import 'package:tp002_dart_pong/gui/iogui.dart';
-import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/iophy.dart';
 import 'package:tp002_dart_pong/iotime.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
@@ -25,20 +19,11 @@ class PongApplication extends IOApplication {
   }
 }
 
-class PongTest extends IOActivity {
-  ui.Image img;
-
-  PongTest(IOApplication app) : super(app);
-
-  void render(Canvas canvas) {}
-}
-
 class PongMenu extends IOActivity {
   static const I7W = 750.0;
   static const I7H = 1334.0;
 
   IOImage bg;
-  IOImage logo;
   IOImage bgPopup;
   IOButton playButton;
   IOButton quitButton;
@@ -46,22 +31,12 @@ class PongMenu extends IOActivity {
 
   PongMenu(IOApplication app) : super(app) {
     gui.clickCB = this.clickCB;
-    gui.resizeCB = this.resizeCB;
-    bg = gui.createImage(gui, 'bg', 'bg_1024.png', IOAnchor.CENTER,
-        Rect.fromLTWH(0, 0, I7W, I7H), IORatio.HORIZONTAL);
-    logo = gui.createImage(gui, 'logo', 'logo.png', IOAnchor.CENTER,
-        Rect.fromLTWH(0, 0, 100, I7H / 10.0), IORatio.NONE);
-    // menu
-    bgPopup = gui.createImage(gui, 'bg_popup', 'bg_popup.png', IOAnchor.CENTER,
-        Rect.fromLTWH(I7W / 2.0, I7H / 2.0, 100, 100), IORatio.NONE);
-    playButton = gui.createButton(bgPopup, 'play', 'win_text.png',
-        IOAnchor.CENTER, Rect.fromLTWH(400, 400, 100, 100));
-    quitButton = gui.createButton(bgPopup, 'quit', 'lose_text.png',
-        IOAnchor.CENTER, Rect.fromLTWH(400, 600, 100, 100));
-    // settings
-    settingsButton = gui.createButton(gui, 'settings', 'settings_on.png',
-        IOAnchor.LOWER_RIGHT, Rect.fromLTWH(I7W, I7H, 100, 100));
-    //settingsButton.loadDisabled('settings_off.png');
+    gui.loadScene('menu.json');
+  }
+
+  @override
+  void onMount() {
+    playButton = gui.findChild("button_1p");
   }
 
   @override
@@ -72,7 +47,7 @@ class PongMenu extends IOActivity {
   // specifics
 
   void clickCB(String uid) {
-    if (uid == 'play') {
+    if (uid == 'button_1p') {
       //exit(0);
       Pong pg = Pong(this.application);
       this.application.start(pg);
@@ -81,37 +56,12 @@ class PongMenu extends IOActivity {
     }
     print('click on $uid');
   }
-
-  void resizeCB(String uid, Position sz) {
-    if (uid == 'logo') {
-      logo.height = sz.y / 10.0;
-      logo.position = Offset(0, -4.0 * sz.y / 10.0);
-    } else if (uid == 'bg_popup') {
-      bgPopup.height = sz.y / 2.0;
-      bgPopup.position = Offset(0, 0);
-    } else if (uid == 'play') {
-      playButton.height = sz.y / 10.0;
-      playButton.position = Offset(0, -sz.y / 10.0);
-    } else if (uid == 'quit') {
-      quitButton.height = sz.y / 10.0;
-      quitButton.position = Offset(0, sz.y / 10.0);
-    } else if (uid == 'settings') {
-      settingsButton.height = sz.y / 20.0;
-      settingsButton.position = Offset(-sz.y / 20.0, -sz.y / 20.0);
-    } else if (uid == 'bg') {
-      if (sz.x < sz.y) {
-        bg.height = sz.y;
-      } else {
-        bg.width = sz.x;
-      }
-      bg.position = Offset(0, 0);
-    }
-  }
 }
 
 enum PongState {
   START,
   PLAY,
+  PAUSED,
   COMPUTER_POINT,
   PLAYER_POINT,
   COMPUTER_VICTORY,
@@ -120,6 +70,8 @@ enum PongState {
 
 class Pong extends IOActivity {
   // constants
+  static const I7W = 750.0;
+  static const I7H = 1334.0;
   static const WALL_SIZE = 36.0;
   static const PUCK_SIZE = 40.0;
   static const PUCK_VELOCITY = 200.0;
@@ -137,6 +89,7 @@ class Pong extends IOActivity {
 
   // score state
   PongState _state = PongState.START;
+  PongState _lastState = PongState.START;
   double _stateDate = 0;
   double _eventDate = 0;
   int _computerScore = 0;
@@ -144,29 +97,55 @@ class Pong extends IOActivity {
 
   // state
   var _size = Size(0, 0);
-  IOScene _scene;
+  // IOScene _scene;
 
-  // messages
+  // gui
+  IOButton pauseButton;
+  IOImage pauseMenu;
+  IOButton quitButton;
   IOImage _winMsg;
   IOAnimator _awinMsg;
 
   Pong(IOApplication app) : super(app) {
+    /*
     _winMsg = gui.createImage(gui, 'play', 'win_text.png', IOAnchor.CENTER,
         Rect.fromLTWH(400, 400, 100, 100), IORatio.VERTICAL);
     _awinMsg = gui.createOpacityAnimator(
         IOLineInterpolator([Position(0, 0), Position(.5, 1), Position(1, 0)]));
 
+    pauseButton = gui.createButton(gui, 'pause', 'pause.png', IOAnchor.CENTER,
+        Rect.fromLTWH(0, 0, 100, 100));
+    // pause menu
+    pauseMenu = gui.createImage(
+        gui,
+        'bg_popup',
+        'bg_popup.png',
+        IOAnchor.CENTER,
+        Rect.fromLTWH(I7W / 2.0, I7H / 2.0, 100, 100),
+        IORatio.NONE);
+    pauseMenu.visible = false;
+    quitButton = gui.createButton(pauseMenu, 'quit', 'quit.png',
+        IOAnchor.CENTER, Rect.fromLTWH(0, 0, 100, 100));
+
+    gui.resizeCB = this.resizeCB;
+    gui.clickCB = this.clickCB;
     _awinMsg.attach(_winMsg);
     _awinMsg.start(IOTime.time, 5);
+    */
   }
 
-  @override
-  void resize(Size sz) {
-    // fonction appelee quand la taille de l ecran est definie
-    print('resize $sz');
+  void resizeCB(Size sz) {
+    // gui part
+    pauseButton.height = sz.height / 20.0;
+    pauseButton.position = Offset(0, 0);
+    pauseMenu.height = sz.height / 4.0;
+    pauseMenu.position = Offset(0, 0);
+    quitButton.height = sz.height / 20.0;
+    quitButton.position = Offset(0, 0);
+    // physic part
     _phy.resize(Position(sz.width, sz.height));
     _size = sz;
-    if (_scene == null) {
+    /*if (_scene == null) {
       // scene
       _scene = IOScene(Position(sz.width, sz.height));
       Flame.util.fullScreen();
@@ -178,21 +157,39 @@ class Pong extends IOActivity {
       _scene.resize(Position(sz.width, sz.height));
       _state = PongState.START;
       _eventDate = _stateDate;
+    }*/
+  }
+
+  void clickCB(String uid) {
+    if (uid == "pause") {
+      if (_state != PongState.PAUSED) {
+        pauseMenu.visible = true;
+        _lastState = _state;
+        _state = PongState.PAUSED;
+      }
     }
-    super.resize(sz);
+    if (uid == "none" && _state == PongState.PAUSED) {
+      pauseMenu.visible = false;
+      _state = _lastState;
+    }
+    if (uid == "quit") {
+      this.application.stop();
+    }
   }
 
   @override
   void render(Canvas canvas) {
-    if (_scene != null) {
+    /* if (_scene != null) {
       _scene.draw(canvas);
-    }
+    } */
     super.render(canvas);
   }
 
   @override
   void update() {
     super.update();
+    // check if pause
+    if (_state == PongState.PAUSED) return;
     // pad management
     if (_padPressed) {
       if ((_padPosition.x - _phy.playerPos.x).abs() < PAD_DX) {
@@ -241,7 +238,7 @@ class Pong extends IOActivity {
           _eventDate = _stateDate;
           _phy.init();
         }
-        _scene?.setScore(_playerScore, _computerScore);
+        // _scene?.setScore(_playerScore, _computerScore);
         break;
       } else if (evt.type == IOPongEventType.VICTORY) {
         _playerScore++;
@@ -255,7 +252,7 @@ class Pong extends IOActivity {
           _eventDate = _stateDate;
           _phy.init();
         }
-        _scene?.setScore(_playerScore, _computerScore);
+        // _scene?.setScore(_playerScore, _computerScore);
         break;
       } else if (evt.type == IOPongEventType.COLLISION_MALLET) {
         if (!kIsWeb) {
@@ -268,7 +265,7 @@ class Pong extends IOActivity {
       }
     }
     _phy.events.clear();
-    if (_scene != null) {
+    /* if (_scene != null) {
       // physic positions into scene
       _scene.puckPos = _phy.puckPos;
       _scene.puckSize = Position(PUCK_SIZE, PUCK_SIZE);
@@ -276,13 +273,14 @@ class Pong extends IOActivity {
       _scene.playerSize = Position(MALLET_SIZE, MALLET_SIZE);
       _scene.computerPos = _phy.computerPos;
       _scene.computerSize = Position(MALLET_SIZE, MALLET_SIZE);
-    }
+    } */
     // print(
     //    '$_date puck: ${_phy.puckPos} player: ${_phy.playerPos} computer: ${_phy.computerPos}');
   }
 
   @override
   void onEvent(IOEvent evt) {
+    super.onEvent(evt);
     if (evt.type == IOEventType.DOWN) {
       _padPressed = true;
     } else if (evt.type == IOEventType.UP) {

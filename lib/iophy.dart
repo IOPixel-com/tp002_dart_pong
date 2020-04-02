@@ -1,8 +1,15 @@
 import 'package:flame/position.dart';
 
-import 'package:tp002_dart_pong/ioscene.dart';
 import 'package:tp002_dart_pong/pong.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
+
+enum IOPongEventType { VICTORY, DEFEAT, COLLISION_WALL, COLLISION_MALLET }
+
+class IOPongEvent {
+  IOPongEventType type;
+
+  IOPongEvent(this.type);
+}
 
 class IOPhy {
   static const int PUCK_SPEED_LIMIT = 10;
