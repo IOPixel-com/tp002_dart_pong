@@ -64,8 +64,8 @@ class IOPhy {
 
   void init([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
     // positions
-    _puckPos = Position((_minX + _maxX) / 2.0, _maxY / 2.0);
-    _playerPos = Position((_minX + _maxX) / 2.0, _malletSize / 2.0);
+    _puckPos = Position((_minX + _maxX) / 2.0, (_minY + _maxY) / 2.0);
+    _playerPos = Position((_minX + _maxX) / 2.0, _malletSize / 2.0 + _minY);
     _computerPos = Position((_minX + _maxX) / 2.0, _maxY - _malletSize / 2.0);
     _puckSpeed = 1;
     _puckVelocity = Position(0, 0);

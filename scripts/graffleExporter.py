@@ -103,11 +103,10 @@ class OmnigraffleLoader():
                 res['objects'][shape['ID']] = shape
                 shape['z_order'] = zOrder
                 zOrder += 1
-            prefixID += 1000
             # recreate links
             for link in links:
-                parentID = link['parent']['ID']
-                childID = link['child']['ID']
+                parentID = int(link['parent']['ID']) + prefixID
+                childID = int(link['child']['ID']) + prefixID
                 parent = res['objects'][parentID]
                 child = res['objects'][childID]
                 parent['children'].append(child)
@@ -116,6 +115,7 @@ class OmnigraffleLoader():
                 # posY = child['center'][1] - parent['center'][1]
                 child['center'] = [child['center'][0], child['center'][1]]
                 child['parentID'] = parentID
+            prefixID += 1000
 
     def openGzipOmnigraffle(self, filepath):
         res = {}

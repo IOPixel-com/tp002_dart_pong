@@ -10,6 +10,8 @@ class IOTextNode extends IOSceneNode {
   TextPainter _painter;
   TextStyle _textStyle;
   var _textSize = Size(0, 0);
+  var _fontColor = Colors.white;
+  var _fontSize = 45.0;
 
   IOTextNode(
       IOScene scene, IONode parent, String uid, IOAnchor anchor, Rect rect)
@@ -18,17 +20,7 @@ class IOTextNode extends IOSceneNode {
       textAlign: TextAlign.center,
       textDirection: TextDirection.ltr,
     );
-    _textStyle = TextStyle(
-      color: Color(0xffffffff),
-      fontSize: 90,
-      shadows: <Shadow>[
-        Shadow(
-          blurRadius: 7,
-          color: Color(0xff000000),
-          offset: Offset(3, 3),
-        ),
-      ],
-    );
+    _updateTextStyle();
   }
 
   set text(String txt) {
@@ -37,6 +29,16 @@ class IOTextNode extends IOSceneNode {
     _painter.layout();
     // retrieve new size -> recompute position
     _textSize = Size(_painter.size.width, _painter.size.height);
+  }
+
+  set color(Color c) {
+    _fontColor = c;
+    _updateTextStyle();
+  }
+
+  set size(double sz) {
+    _fontSize = sz;
+    _updateTextStyle();
   }
 
   @override
@@ -61,5 +63,19 @@ class IOTextNode extends IOSceneNode {
     for (var child in children) {
       child.render(canvas);
     }
+  }
+
+  _updateTextStyle() {
+    _textStyle = TextStyle(
+      color: _fontColor,
+      fontSize: _fontSize,
+      shadows: <Shadow>[
+        Shadow(
+          blurRadius: 7,
+          color: Color(0xff000000),
+          offset: Offset(3, 3),
+        ),
+      ],
+    );
   }
 }

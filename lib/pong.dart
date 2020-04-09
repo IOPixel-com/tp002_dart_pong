@@ -10,6 +10,7 @@ import 'package:tp002_dart_pong/gui/index.dart';
 import 'package:tp002_dart_pong/iophy.dart';
 import 'package:tp002_dart_pong/iotime.dart';
 import 'package:tp002_dart_pong/ioapplication.dart';
+import 'package:tp002_dart_pong/scene/iotextnode.dart';
 
 enum IOTIPOFF { PLAYER, COMPUTER }
 
@@ -60,11 +61,8 @@ class Pong extends IOActivity {
   // constants
   static const I7W = 750.0;
   static const I7H = 1334.0;
-  // static const WALL_SIZE = 36.0;
-  // static const PUCK_SIZE = 40.0;
   static const PUCK_VELOCITY = 200.0;
   static const PUCK_ACCELERATION = 1.2;
-  // static const MALLET_SIZE = 64.0;
   static const PAD_DX = 10.0;
 
   // gamepad
@@ -92,38 +90,14 @@ class Pong extends IOActivity {
   var _mounted = false;
 
   // gui
-  IOButton pauseButton;
-  IOImage pauseMenu;
-  IOButton quitButton;
+  IOImage _pauseMenu;
+  IOTextNode _computerScoreNode;
+  IOTextNode _playerScoreNode;
 
   Pong(IOApplication app) : super(app) {
     scene.loadScene("game.json");
     gui.loadScene("game.json");
-    /*
-    _winMsg = gui.createImage(gui, 'play', 'win_text.png', IOAnchor.CENTER,
-        Rect.fromLTWH(400, 400, 100, 100), IORatio.VERTICAL);
-    _awinMsg = gui.createOpacityAnimator(
-        IOLineInterpolator([Position(0, 0), Position(.5, 1), Position(1, 0)]));
-
-    pauseButton = gui.createButton(gui, 'pause', 'pause.png', IOAnchor.CENTER,
-        Rect.fromLTWH(0, 0, 100, 100));
-    // pause menu
-    pauseMenu = gui.createImage(
-        gui,
-        'bg_popup',
-        'bg_popup.png',
-        IOAnchor.CENTER,
-        Rect.fromLTWH(I7W / 2.0, I7H / 2.0, 100, 100),
-        IORatio.NONE);
-    pauseMenu.visible = false;
-    quitButton = gui.createButton(pauseMenu, 'quit', 'quit.png',
-        IOAnchor.CENTER, Rect.fromLTWH(0, 0, 100, 100));
-
-    gui.resizeCB = this.resizeCB;
     gui.clickCB = this.clickCB;
-    _awinMsg.attach(_winMsg);
-    _awinMsg.start(IOTime.time, 5);
-    */
   }
 
   @override
@@ -134,6 +108,10 @@ class Pong extends IOActivity {
     _player1 = scene.findChild("player1");
     _player2 = scene.findChild("player2");
     _puck = scene.findChild("puck");
+    _playerScoreNode = scene.findChild("score1");
+    _computerScoreNode = scene.findChild("score2");
+    // gui
+    _pauseMenu = gui.findChild("menu_pause");
   }
 
   @override
@@ -147,22 +125,24 @@ class Pong extends IOActivity {
     _phy.malletSize = _player1.relativeRect.width;
     _phy.init();
     _state = PongState.START;
+    _computerScoreNode?.text = _computerScore.toStringAsFixed(0);
+    _playerScoreNode?.text = _playerScore.toStringAsFixed(0);
   }
 
   void clickCB(String uid) {
     if (uid == "pause") {
       if (_state != PongState.PAUSED) {
-        pauseMenu.visible = true;
+        _pauseMenu.visible = true;
         _lastState = _state;
         _state = PongState.PAUSED;
       }
     }
-    if (uid == "none" && _state == PongState.PAUSED) {
-      pauseMenu.visible = false;
-      _state = _lastState;
-    }
     if (uid == "quit") {
       this.application.stop();
+    }
+    if (uid == "none" && _state == PongState.PAUSED) {
+      _pauseMenu.visible = false;
+      _state = _lastState;
     }
   }
 
@@ -222,6 +202,8 @@ class Pong extends IOActivity {
           _eventDate = _stateDate;
           _phy.init();
         }
+        _computerScoreNode?.text = _computerScore.toStringAsFixed(0);
+        _playerScoreNode?.text = _playerScore.toStringAsFixed(0);
         // _scene?.setScore(_playerScore, _computerScore);
         break;
       } else if (evt.type == IOPongEventType.VICTORY) {
@@ -236,7 +218,8 @@ class Pong extends IOActivity {
           _eventDate = _stateDate;
           _phy.init();
         }
-        // _scene?.setScore(_playerScore, _computerScore);
+        _computerScoreNode?.text = _computerScore.toStringAsFixed(0);
+        _playerScoreNode?.text = _playerScore.toStringAsFixed(0);
         break;
       } else if (evt.type == IOPongEventType.COLLISION_MALLET) {
         if (!kIsWeb) {
