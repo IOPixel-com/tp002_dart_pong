@@ -16,16 +16,19 @@ class IOPhy {
   // walls
   double _minX = 0;
   double _maxX = 100;
-  double _height = 100;
+  double _minY = 0;
+  double _maxY = 100;
 
   // puck
   Position _puckPos = Position(50, 50);
   Position _puckVelocity = Position(0, 1);
+  double _puckSize = 50;
   int _puckSpeed = 1;
 
   // computer & player
   Position _playerPos = Position(50, 0);
   Position _computerPos = Position(50, 100);
+  double _malletSize = 50;
 
   // AI
 
@@ -44,31 +47,33 @@ class IOPhy {
     return _computerPos;
   }
 
-  void resize(Position sz) {
-    // wall
-    _minX = Pong.WALL_SIZE;
-    _maxX = sz.x - Pong.WALL_SIZE;
-    _height = sz.y;
-    // restart game
-    init();
+  void setWalls(double minX, maxX, minY, maxY) {
+    _minX = minX;
+    _maxX = maxX;
+    _minY = minY;
+    _maxY = maxY;
+  }
+
+  set puckSize(double sz) {
+    _puckSize = sz;
+  }
+
+  set malletSize(double sz) {
+    _malletSize = sz;
   }
 
   void init([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
     // positions
-    _puckPos = Position((_minX + _maxX) / 2.0, _height / 2.0);
-    _playerPos = Position((_minX + _maxX) / 2.0, Pong.MALLET_SIZE / 2.0);
-    _computerPos =
-        Position((_minX + _maxX) / 2.0, _height - Pong.MALLET_SIZE / 2.0);
+    _puckPos = Position((_minX + _maxX) / 2.0, _maxY / 2.0);
+    _playerPos = Position((_minX + _maxX) / 2.0, _malletSize / 2.0);
+    _computerPos = Position((_minX + _maxX) / 2.0, _maxY - _malletSize / 2.0);
     _puckSpeed = 1;
     _puckVelocity = Position(0, 0);
   }
 
   void start([IOTIPOFF tipoff = IOTIPOFF.PLAYER]) {
     // positions
-    _puckPos = Position((_minX + _maxX) / 2.0, _height / 2.0);
-    //_playerPos = Position((_minX + _maxX) / 2.0, Pong.MALLET_SIZE / 2.0);
-    //_computerPos =
-    //    Position((_minX + _maxX) / 2.0, _height - Pong.MALLET_SIZE / 2.0);
+    _puckPos = Position((_minX + _maxX) / 2.0, _maxY / 2.0);
     if (tipoff == IOTIPOFF.PLAYER) {
       _puckVelocity = Position(0, -Pong.PUCK_VELOCITY);
     } else {
@@ -86,22 +91,22 @@ class IOPhy {
     // update player position
     if (direction == IOPAD.CENTER) {
       // limit to walls
-      if (_playerPos.x - Pong.MALLET_SIZE / 2.0 - Pong.PAD_DX < _minX) {
-        _playerPos.x = _minX + Pong.MALLET_SIZE / 2.0;
-      } else if (_playerPos.x + Pong.MALLET_SIZE / 2.0 + Pong.PAD_DX > _maxX) {
-        _playerPos.x = _maxX - Pong.MALLET_SIZE / 2.0;
+      if (_playerPos.x - _malletSize / 2.0 - Pong.PAD_DX < _minX) {
+        _playerPos.x = _minX + _malletSize / 2.0;
+      } else if (_playerPos.x + _malletSize / 2.0 + Pong.PAD_DX > _maxX) {
+        _playerPos.x = _maxX - _malletSize / 2.0;
       }
     } else if (direction == IOPAD.LEFT) {
       // limit to the left wall
-      if (_playerPos.x - Pong.MALLET_SIZE / 2.0 - Pong.PAD_DX < _minX) {
-        _playerPos.x = _minX + Pong.MALLET_SIZE / 2.0;
+      if (_playerPos.x - _malletSize / 2.0 - Pong.PAD_DX < _minX) {
+        _playerPos.x = _minX + _malletSize / 2.0;
       } else {
         _playerPos.x -= Pong.PAD_DX;
       }
     } else if (direction == IOPAD.RIGHT) {
       // limit to the right wall
-      if (_playerPos.x + Pong.MALLET_SIZE / 2.0 + Pong.PAD_DX > _maxX) {
-        _playerPos.x = _maxX - Pong.MALLET_SIZE / 2.0;
+      if (_playerPos.x + _malletSize / 2.0 + Pong.PAD_DX > _maxX) {
+        _playerPos.x = _maxX - _malletSize / 2.0;
       } else {
         _playerPos.x += Pong.PAD_DX;
       }
@@ -111,28 +116,27 @@ class IOPhy {
     // update puck pos
     Position newPos = _puckPos + _puckVelocity * dT;
     // check end of point
-    if (newPos.y < Pong.MALLET_SIZE / 2.0) {
+    if (newPos.y < _minY + _malletSize / 2.0) {
       // one point for computer
       events.add(IOPongEvent(IOPongEventType.DEFEAT));
       return;
-    } else if (newPos.y > _height - Pong.MALLET_SIZE / 2.0) {
+    } else if (newPos.y > _maxY - _malletSize / 2.0) {
       // one point for player
       events.add(IOPongEvent(IOPongEventType.VICTORY));
       return;
     }
-    // check collision with walls
-    if (newPos.x < _minX + Pong.MALLET_SIZE / 2.0) {
+    // check puck collision with walls
+    if (newPos.x < _minX + _puckSize / 2.0) {
       // collision on left wall
       _puckVelocity.x = -_puckVelocity.x;
       events.add(IOPongEvent(IOPongEventType.COLLISION_WALL));
-    } else if (newPos.x > _maxX - Pong.MALLET_SIZE / 2.0) {
+    } else if (newPos.x > _maxX - _puckSize / 2.0) {
       // collision on right wall
       _puckVelocity.x = -_puckVelocity.x;
       events.add(IOPongEvent(IOPongEventType.COLLISION_WALL));
     }
     // check collision with mallets
-    if (_playerPos.distance(newPos) <
-        (Pong.MALLET_SIZE + Pong.PUCK_SIZE) / 2.0) {
+    if (_playerPos.distance(newPos) < (_malletSize + _puckSize) / 2.0) {
       // collision with player
       double velocity = 1.0;
       if (_puckSpeed < PUCK_SPEED_LIMIT) {
@@ -146,7 +150,7 @@ class IOPhy {
       newPos = _puckPos + _puckVelocity * dT;
       events.add(IOPongEvent(IOPongEventType.COLLISION_MALLET));
     } else if (_computerPos.distance(newPos) <
-        (Pong.MALLET_SIZE + Pong.PUCK_SIZE) / 2.0) {
+        (_malletSize + _puckSize) / 2.0) {
       // collision with computer
       double velocity = 1.0;
       if (_puckSpeed < PUCK_SPEED_LIMIT) {

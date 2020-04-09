@@ -5,9 +5,10 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import 'package:flame/position.dart';
 
+import 'package:tp002_dart_pong/gfx/index.dart';
 import 'package:tp002_dart_pong/gui/index.dart';
+import 'package:tp002_dart_pong/scene/index.dart';
 import 'package:tp002_dart_pong/iotime.dart';
-import 'package:tp002_dart_pong/render/resources_loader.dart';
 
 enum IOPAD { CENTER, LEFT, RIGHT, NONE }
 
@@ -31,32 +32,35 @@ class IOActivity {
   var _resourceLoader = IOResourcesLoader();
   // gui
   IOGUI gui;
+  // scene
+  IOScene scene;
 
   IOActivity(this.application) {
     gui = IOGUI(_resourceLoader);
+    scene = IOScene(_resourceLoader);
   }
 
   void resize(Size sz) {
     if (_status == IOActivityStatus.STARTED) {
       gui.size = sz;
+      scene.size = sz;
     }
   }
 
   void render(Canvas canvas) {
-    if (_status == IOActivityStatus.STARTED) {
-      gui.render(canvas);
+    if (_resourceLoader != null) {
+      _resourceLoader.update();
     }
-  }
-
-  void update() {
     if (_status == IOActivityStatus.INIT) {
       if (_resourceLoader.loaded) {
         _status = IOActivityStatus.STARTED;
-        resize(application.size);
         onMount();
+        resize(application.size);
       }
-    } else if (_status == IOActivityStatus.STARTED) {
-      gui.update();
+    }
+    if (_status == IOActivityStatus.STARTED) {
+      scene.render(canvas);
+      gui.render(canvas);
     }
   }
 
@@ -71,10 +75,6 @@ class IOActivity {
   // util
   bool get resourcesLoaded {
     return _resourceLoader.loaded;
-  }
-
-  Future<IOResource> loadTexture(String fileName, [IOResourceLoadedCB cb]) {
-    return _resourceLoader.loadTexture(fileName, cb);
   }
 }
 
@@ -120,7 +120,6 @@ class IOApplication extends Game {
   @override
   void update(double t) {
     IOTime.incTime(t);
-    _current?.update();
   }
 
   void down(PointerEvent details) {

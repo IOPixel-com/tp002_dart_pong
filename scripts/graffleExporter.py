@@ -40,7 +40,7 @@ class OmnigraffleLoader():
         res['images'] = {}
         if 'Images' in plist:
             for img in plist['Images']:
-                uid = img['ID']
+                uid = int(img['ID'])
                 spriteName = os.path.basename(img['FileReference']['path'])
                 res['images'][uid] = spriteName
             #msg = "uid: %s uid: %s" % (uid, res['images'][uid])
@@ -52,6 +52,7 @@ class OmnigraffleLoader():
         if 'Sheets' not in plist:
             return
         links = []
+        prefixID = 0
         for sheet in plist['Sheets']:
             # canvas size
             size = parse2Elements(sheet['CanvasSize'])
@@ -72,7 +73,7 @@ class OmnigraffleLoader():
                     continue
                 # default info
                 shape = {'shape': 'Rectangle'}
-                shape['ID'] = g['ID']
+                shape['ID'] = int(g['ID']) + prefixID
                 shape['name'] = g['Name']
                 # read user info
                 userInfo = g['UserInfo']
@@ -80,6 +81,12 @@ class OmnigraffleLoader():
                 shape['valign'] = userInfo['valign']
                 shape['category'] = userInfo['category']
                 shape['scale'] = userInfo['scale']
+                if 'txt' in userInfo:
+                    shape['txt'] = userInfo['txt']
+                if 'visible' in userInfo:
+                    shape['visible'] = userInfo['visible']
+                else:
+                    shape['visible'] = True
                 if 'widget' in userInfo:
                     shape['widget'] = userInfo['widget']
                 if 'align' in userInfo:
@@ -91,11 +98,12 @@ class OmnigraffleLoader():
                     shape['size'] = [bounds[2], bounds[3]]
                     shape['center'] = [bounds[0], bounds[1]]
                 if 'ImageID' in g:
-                    shape['sprite'] = res['images'][g['ImageID']]
+                    shape['sprite'] = res['images'][int(g['ImageID'])]
                 shape['children'] = []
                 res['objects'][shape['ID']] = shape
                 shape['z_order'] = zOrder
                 zOrder += 1
+            prefixID += 1000
             # recreate links
             for link in links:
                 parentID = link['parent']['ID']

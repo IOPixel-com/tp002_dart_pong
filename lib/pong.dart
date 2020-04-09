@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 
 import 'package:flame/position.dart';
 import 'package:flame/flame.dart';
+import 'package:tp002_dart_pong/gfx/index.dart';
 import 'package:tp002_dart_pong/gui/index.dart';
 
 import 'package:tp002_dart_pong/iophy.dart';
@@ -23,28 +24,15 @@ class PongMenu extends IOActivity {
   static const I7W = 750.0;
   static const I7H = 1334.0;
 
-  IOImage bg;
-  IOImage bgPopup;
-  IOButton playButton;
-  IOButton quitButton;
-  IOButton settingsButton;
-
   PongMenu(IOApplication app) : super(app) {
     gui.clickCB = this.clickCB;
     gui.loadScene('menu.json');
   }
 
   @override
-  void onMount() {
-    playButton = gui.findChild("button_1p");
-  }
-
-  @override
   void render(Canvas canvas) {
     super.render(canvas);
   }
-
-  // specifics
 
   void clickCB(String uid) {
     if (uid == 'button_1p') {
@@ -72,11 +60,11 @@ class Pong extends IOActivity {
   // constants
   static const I7W = 750.0;
   static const I7H = 1334.0;
-  static const WALL_SIZE = 36.0;
-  static const PUCK_SIZE = 40.0;
+  // static const WALL_SIZE = 36.0;
+  // static const PUCK_SIZE = 40.0;
   static const PUCK_VELOCITY = 200.0;
   static const PUCK_ACCELERATION = 1.2;
-  static const MALLET_SIZE = 64.0;
+  // static const MALLET_SIZE = 64.0;
   static const PAD_DX = 10.0;
 
   // gamepad
@@ -86,6 +74,11 @@ class Pong extends IOActivity {
 
   // phy state
   IOPhy _phy = IOPhy();
+  IONode _wallLeft;
+  IONode _wallRight;
+  IONode _puck;
+  IONode _player2;
+  IONode _player1;
 
   // score state
   PongState _state = PongState.START;
@@ -96,17 +89,16 @@ class Pong extends IOActivity {
   int _playerScore = 0;
 
   // state
-  var _size = Size(0, 0);
-  // IOScene _scene;
+  var _mounted = false;
 
   // gui
   IOButton pauseButton;
   IOImage pauseMenu;
   IOButton quitButton;
-  IOImage _winMsg;
-  IOAnimator _awinMsg;
 
   Pong(IOApplication app) : super(app) {
+    scene.loadScene("game.json");
+    gui.loadScene("game.json");
     /*
     _winMsg = gui.createImage(gui, 'play', 'win_text.png', IOAnchor.CENTER,
         Rect.fromLTWH(400, 400, 100, 100), IORatio.VERTICAL);
@@ -134,30 +126,27 @@ class Pong extends IOActivity {
     */
   }
 
-  void resizeCB(Size sz) {
-    // gui part
-    pauseButton.height = sz.height / 20.0;
-    pauseButton.position = Offset(0, 0);
-    pauseMenu.height = sz.height / 4.0;
-    pauseMenu.position = Offset(0, 0);
-    quitButton.height = sz.height / 20.0;
-    quitButton.position = Offset(0, 0);
+  @override
+  void onMount() {
+    _mounted = true;
+    _wallLeft = scene.findChild("wall_left");
+    _wallRight = scene.findChild("wall_right");
+    _player1 = scene.findChild("player1");
+    _player2 = scene.findChild("player2");
+    _puck = scene.findChild("puck");
+  }
+
+  @override
+  void resize(Size sz) {
+    super.resize(sz);
+    scene.recalculateAbsoluteRect(false);
     // physic part
-    _phy.resize(Position(sz.width, sz.height));
-    _size = sz;
-    /*if (_scene == null) {
-      // scene
-      _scene = IOScene(Position(sz.width, sz.height));
-      Flame.util.fullScreen();
-      Flame.util.setPortrait();
-      if (!kIsWeb) {
-        Flame.audio.loadAll(['puck.mp3', 'goal.mp3']);
-      }
-    } else {
-      _scene.resize(Position(sz.width, sz.height));
-      _state = PongState.START;
-      _eventDate = _stateDate;
-    }*/
+    _phy.setWalls(_wallLeft.absoluteRect.right, _wallRight.absoluteRect.left,
+        _wallRight.absoluteRect.top, _wallRight.absoluteRect.bottom);
+    _phy.puckSize = _puck.relativeRect.width;
+    _phy.malletSize = _player1.relativeRect.width;
+    _phy.init();
+    _state = PongState.START;
   }
 
   void clickCB(String uid) {
@@ -179,15 +168,11 @@ class Pong extends IOActivity {
 
   @override
   void render(Canvas canvas) {
-    /* if (_scene != null) {
-      _scene.draw(canvas);
-    } */
+    update();
     super.render(canvas);
   }
 
-  @override
   void update() {
-    super.update();
     // check if pause
     if (_state == PongState.PAUSED) return;
     // pad management
@@ -225,7 +210,6 @@ class Pong extends IOActivity {
     _phy.update(IOTime.delta, _pad);
     // handle events
     for (var evt in _phy.events) {
-      print("${evt.type} $_stateDate");
       if (evt.type == IOPongEventType.DEFEAT) {
         _computerScore++;
         if (_computerScore >= 5) {
@@ -265,15 +249,12 @@ class Pong extends IOActivity {
       }
     }
     _phy.events.clear();
-    /* if (_scene != null) {
-      // physic positions into scene
-      _scene.puckPos = _phy.puckPos;
-      _scene.puckSize = Position(PUCK_SIZE, PUCK_SIZE);
-      _scene.playerPos = _phy.playerPos;
-      _scene.playerSize = Position(MALLET_SIZE, MALLET_SIZE);
-      _scene.computerPos = _phy.computerPos;
-      _scene.computerSize = Position(MALLET_SIZE, MALLET_SIZE);
-    } */
+    // physic positions into scene
+    if (_mounted) {
+      _puck.center = Offset(_phy.puckPos.x, _phy.puckPos.y);
+      _player1.center = Offset(_phy.playerPos.x, _phy.playerPos.y);
+      _player2.center = Offset(_phy.computerPos.x, _phy.computerPos.y);
+    }
     // print(
     //    '$_date puck: ${_phy.puckPos} player: ${_phy.playerPos} computer: ${_phy.computerPos}');
   }
