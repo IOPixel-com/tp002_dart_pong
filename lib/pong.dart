@@ -91,6 +91,8 @@ class Pong extends IOActivity {
 
   // gui
   IOImage _pauseMenu;
+  IOAnimator _winAnim;
+  IOAnimator _loseAnim;
   IOTextNode _computerScoreNode;
   IOTextNode _playerScoreNode;
 
@@ -111,7 +113,18 @@ class Pong extends IOActivity {
     _playerScoreNode = scene.findChild("score1");
     _computerScoreNode = scene.findChild("score2");
     // gui
+    var lineI1 = IOLineInterpolator();
+    lineI1.addPoints(
+        [Position(0, 0), Position(.1, 1), Position(.9, 1), Position(1, 0)]);
     _pauseMenu = gui.findChild("menu_pause");
+    var winNode = gui.findChild("msg_win");
+    _winAnim = gui.createOpacityAnimator(lineI1);
+    _winAnim.disappearAtEnd = true;
+    _winAnim.attach(winNode);
+    var loseNode = gui.findChild("msg_lose");
+    _loseAnim = gui.createOpacityAnimator(lineI1);
+    _loseAnim.disappearAtEnd = true;
+    _loseAnim.attach(loseNode);
   }
 
   @override
@@ -196,15 +209,15 @@ class Pong extends IOActivity {
           _state = PongState.COMPUTER_VICTORY;
           _eventDate = _stateDate;
           _phy.init();
+          // anim lose
+          _loseAnim.start(4);
         } else {
-          // _phy.start(IOTIPOFF.PLAYER);
           _state = PongState.START;
           _eventDate = _stateDate;
           _phy.init();
         }
         _computerScoreNode?.text = _computerScore.toStringAsFixed(0);
         _playerScoreNode?.text = _playerScore.toStringAsFixed(0);
-        // _scene?.setScore(_playerScore, _computerScore);
         break;
       } else if (evt.type == IOPongEventType.VICTORY) {
         _playerScore++;
@@ -212,6 +225,8 @@ class Pong extends IOActivity {
           _state = PongState.PLAYER_VICTORY;
           _eventDate = _stateDate;
           _phy.init();
+          // anim win
+          _winAnim.start(4);
         } else {
           // _phy.start(IOTIPOFF.COMPUTER);
           _state = PongState.START;

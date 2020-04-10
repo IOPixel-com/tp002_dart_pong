@@ -48,11 +48,11 @@ class IOAnimator {
     }
   }
 
-  void start(double at, [double duration = 1.0]) {
-    _startDate = at;
+  void start([double duration = 1.0]) {
+    _startDate = IOTime.time;
     _endDate = _startDate + duration;
     _status = IOANIMATORSTATUS.STARTED;
-    onStart(at);
+    onStart(IOTime.time);
   }
 
   void stop() {
@@ -64,13 +64,13 @@ class IOAnimator {
   }
 
   void animate() {
-    var date = IOTime.time;
     if (_status == IOANIMATORSTATUS.INIT ||
         _status == IOANIMATORSTATUS.FINISHED) {
       return;
     } else if (_status == IOANIMATORSTATUS.STARTED) {
       _status = IOANIMATORSTATUS.RUNNING;
     }
+    var date = IOTime.time;
     double v = (date - _startDate) / (_endDate - _startDate);
     if (v > 1.0) {
       // end
@@ -115,8 +115,14 @@ class IOVisibilityAnimator extends IOAnimator {
 class IOOpacityAnimator extends IOAnimator {
   IOOpacityAnimator([IOInterpolator i]) : super(i);
 
+  onStart(double date) {
+    for (var a in _animatables) {
+      a.visible = true;
+    }
+  }
+
   void onAnimate(IOElement a, double date, double v) {
-    print('opa $v ${a.visible}');
+    // print('opa $v ${a.visible}');
     a.opacity = v;
   }
 }
